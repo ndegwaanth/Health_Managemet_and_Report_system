@@ -3,9 +3,370 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Dashboard | HealthTrack Pro</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/homepage.css') }}">
 </head>
 <body>
-    <h1>Hello {{ current_user }} to Health management system</h1>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-heartbeat me-2"></i>HealthTrack Pro
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('main.homepage') }}"><i class="fas fa-home me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.medical_records') }}"><i class="fas fa-file-medical me-1"></i> Medical Records</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.appointments') }}"><i class="fas fa-calendar-check me-1"></i> Appointments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.expenses') }}"><i class="fas fa-chart-line me-1"></i> Cost Reporting</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
+                            <img src="{{ url_for('static', filename='images/user-avatar.png') }}" alt="User" width="32" height="32" class="rounded-circle me-2">
+                            <span>{{ current_user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('main.profile') }}"><i class="fas fa-user me-2"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.settings') }}"><i class="fas fa-cog me-2"></i> Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.logout') }}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('main.homepage') }}">
+                                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.health_metrics') }}">
+                                <i class="fas fa-heartbeat me-2"></i> Health Metrics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.medications') }}">
+                                <i class="fas fa-pills me-2"></i> Medications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.expenses') }}">
+                                <i class="fas fa-shield-alt me-2"></i> Expenses
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.reports') }}">
+                                <i class="fas fa-file-alt me-2"></i> Reports
+                            </a>
+                        </li>
+                    </ul>
+
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>Quick Actions</span>
+                    </h6>
+                    <ul class="nav flex-column mb-2">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.new_appointment') }}">
+                                <i class="fas fa-plus-circle me-2"></i> New Appointment
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.add_record') }}">
+                                <i class="fas fa-file-medical me-2"></i> Add Medical Record
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.submit_claim') }}">
+                                <i class="fas fa-file-invoice-dollar me-2"></i> Submit Insurance Claim
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Dashboard -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <!-- Welcome Banner -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Welcome, {{ current_user.firstname }}!</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-plus me-1"></i> New Record
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-white bg-primary mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title">Upcoming Appointments</h6>
+                                        <h2 class="card-text">3</h2>
+                                    </div>
+                                    <i class="fas fa-calendar-alt fa-3x"></i>
+                                </div>
+                                <a href="{{ url_for('main.appointments') }}" class="text-white stretched-link"></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-success mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title">Active Medications</h6>
+                                        <h2 class="card-text">5</h2>
+                                    </div>
+                                    <i class="fas fa-pills fa-3x"></i>
+                                </div>
+                                <a href="{{ url_for('main.medications') }}" class="text-white stretched-link"></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-warning mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title">Pending Claims</h6>
+                                        <h2 class="card-text">2</h2>
+                                    </div>
+                                    <i class="fas fa-file-invoice-dollar fa-3x"></i>
+                                </div>
+                                <a href="{{ url_for('main.insurance') }}" class="text-white stretched-link"></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-info mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title">Monthly Expenses</h6>
+                                        <h2 class="card-text">$1,245</h2>
+                                    </div>
+                                    <i class="fas fa-dollar-sign fa-3x"></i>
+                                </div>
+                                <a href="{{ url_for('main.expenses') }}" class="text-white stretched-link"></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Health Metrics Overview</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="healthMetricsChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Medical Expenses Breakdown</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="expensesChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Appointments -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5>Upcoming Appointments</h5>
+                                <a href="{{ url_for('main.appointments') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Time</th>
+                                                <th>Provider</th>
+                                                <th>Specialty</th>
+                                                <th>Location</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>May 15, 2023</td>
+                                                <td>10:00 AM</td>
+                                                <td>Dr. Sarah Johnson</td>
+                                                <td>Cardiology</td>
+                                                <td>Main Hospital</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary">Details</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>May 20, 2023</td>
+                                                <td>2:30 PM</td>
+                                                <td>Dr. Michael Chen</td>
+                                                <td>Dermatology</td>
+                                                <td>Clinic B</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary">Details</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>May 25, 2023</td>
+                                                <td>9:15 AM</td>
+                                                <td>Dr. Emily Wilson</td>
+                                                <td>General Practice</td>
+                                                <td>Health Center</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary">Details</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activities and Alerts -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Recent Activities</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush">
+                                    <a href="#" class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">New Lab Results Added</h6>
+                                            <small class="text-muted">2 hours ago</small>
+                                        </div>
+                                        <p class="mb-1">Blood test results from May 10 are now available</p>
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">Prescription Refilled</h6>
+                                            <small class="text-muted">1 day ago</small>
+                                        </div>
+                                        <p class="mb-1">Metformin prescription was refilled at CVS Pharmacy</p>
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">Insurance Claim Processed</h6>
+                                            <small class="text-muted">3 days ago</small>
+                                        </div>
+                                        <p class="mb-1">Claim #12345 was approved for $150</p>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Health Alerts</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-exclamation-triangle me-3 fa-lg"></i>
+                                        <div>
+                                            <h6 class="alert-heading">Medication Due</h6>
+                                            <p class="mb-0">Your prescription for Lisinopril is running low (5 doses remaining)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-info-circle me-3 fa-lg"></i>
+                                        <div>
+                                            <h6 class="alert-heading">Preventive Care</h6>
+                                            <p class="mb-0">Your annual physical exam is due in 3 months</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-danger">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-bell me-3 fa-lg"></i>
+                                        <div>
+                                            <h6 class="alert-heading">High Blood Pressure</h6>
+                                            <p class="mb-0">Your last reading was elevated (145/92 mmHg)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <span class="text-muted">© 2023 HealthTrack Pro. All rights reserved.</span>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-muted me-3">Privacy Policy</a>
+                    <a href="#" class="text-muted me-3">Terms of Service</a>
+                    <a href="#" class="text-muted">HIPAA Compliance</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/homepage.js') }}"></script>
 </body>
 </html>

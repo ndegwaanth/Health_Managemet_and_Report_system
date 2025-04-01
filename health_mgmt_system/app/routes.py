@@ -106,4 +106,66 @@ def login():
     return render_template('login.html', form=form)
 
 
+@main_bp.route('/medical/records')
+def medical_records():
+    return render_template('medical_records.html')
 
+
+@main_bp.route("/appointment")
+def appointments():
+    return render_template("appointments.html")
+
+
+@main_bp.route("/expenses")
+def expenses():
+    return render_template("expenses.html")
+
+@main_bp.route("/profile/settings")
+def settings():
+    return render_template("settings.html")
+
+@main_bp.route("/finance/reports")
+def reports():
+    return render_template("reports.html")
+
+@main_bp.route("/profile/view")
+def profile():
+    return render_template("profile.html")
+
+
+@main_bp.route("/patient/info")
+def patients():
+    return render_template("patients.html")
+
+
+@main_bp.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
+
+
+@main_bp.route('/patient/health/metrics')
+def health_metrics():
+    return render_template("health_metrics.html")
+
+@main_bp.route('/medications')
+def medications():
+    return render_template("medications.html")
+
+
+@main_bp.route("/appointment/new-appointment")
+def new_appointment():
+    return render_template("new_appointment.html")
+
+@main_bp.route("/patient/new/record")
+def add_record():
+    return render_template("add_record.html")
+
+
+@main_bp.route("/claim/submission")
+def submit_claim():
+    return render_template("claim.html")
+
+
+@main_bp.route("/insuarance")
+def insurance():
+    return render_template("insurance.html")
