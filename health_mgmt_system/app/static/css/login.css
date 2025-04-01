@@ -1,0 +1,159 @@
+/* General Styles */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-image: url('../images/health-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-blend-mode: overlay;
+    background-color: rgba(248, 249, 250, 0.9);
+}
+
+/* Card Styling */
+.card {
+    border-radius: 15px;
+    border: none;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: rgba(255, 255, 255, 0.95);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Logo Styling */
+.logo {
+    height: 60px;
+    width: auto;
+}
+
+/* Form Styling */
+.form-floating {
+    margin-bottom: 1.25rem;
+}
+
+.form-control {
+    border-radius: 10px;
+    padding: 1rem 1rem;
+    border: 1px solid #ced4da;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Button Styling */
+.btn-primary {
+    background-color: #0d6efd;
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    transform: translateY(-2px);
+}
+
+/* Divider Styling */
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.5rem 0;
+    color: #6c757d;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.divider::before {
+    margin-right: 1rem;
+}
+
+.divider::after {
+    margin-left: 1rem;
+}
+
+/* Social Button Styling */
+.social-btn {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.social-btn:hover {
+    transform: translateY(-3px);
+    background-color: #f8f9fa;
+}
+
+/* Checkbox Styling */
+.form-check-input {
+    width: 1.1em;
+    height: 1.1em;
+    margin-top: 0.15em;
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Forgot Password Link */
+a.text-primary {
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a.text-primary:hover {
+    color: #0b5ed7 !important;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .card {
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .logo {
+        height: 50px;
+    }
+    
+    body {
+        background-image: none;
+        background-color: #f8f9fa;
+    }
+}
+
+/* Animation for Form Elements */
+.form-floating label,
+.form-control {
+    transition: all 0.3s ease;
+}
+
+.form-control:focus ~ label {
+    color: #0d6efd;
+}
+
+/* Loading Spinner */
+.spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-width: 0.2em;
+    display: none;
+}

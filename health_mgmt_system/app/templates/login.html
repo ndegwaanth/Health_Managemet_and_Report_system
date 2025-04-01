@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - HealthTrack Pro</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <!-- Login Card -->
+                <div class="card shadow-lg my-5">
+                    <div class="card-body p-5">
+                        <!-- Logo and Header -->
+                        <div class="text-center mb-4">
+                            <img src="{{ url_for('static', filename='images/Helath_track_dashboard.png') }}" alt="HealthTrack Pro Logo" class="logo mb-3">
+                            <h2 class="fw-bold text-primary">Welcome Back</h2>
+                            <p class="text-muted">Sign in to access your health records and dashboard</p>
+                        </div>
+
+                        <!-- Flash Messages -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <!-- Login Form -->
+                        <form method="POST" action="{{ url_for('main.login') }}" novalidate>
+                            {{ form.hidden_tag() }}
+                            
+                            <!-- Email Field -->
+                            <div class="form-floating mb-3">
+                                {{ form.email(class="form-control", id="email", placeholder="john@example.com") }}
+                                <label for="email">Email Address</label>
+                                {% for error in form.email.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Password Field -->
+                            <div class="form-floating mb-3">
+                                {{ form.password(class="form-control", id="password", placeholder="Password") }}
+                                <label for="password">Password</label>
+                                {% for error in form.password.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Remember Me & Forgot Password -->
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="remember" name="remember">
+                                    <label class="form-check-label" for="remember">Remember me</label>
+                                </div>
+                                <a href="#" class="text-primary">Forgot password?</a>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <button type="submit" class="btn btn-primary w-100 py-3 mb-3">
+                                <i class="fas fa-sign-in-alt me-2"></i> Sign In
+                            </button>
+                            
+                            <!-- Divider -->
+                            <div class="divider my-4">
+                                <span class="divider-text">OR</span>
+                            </div>
+                            
+                            <!-- Social Login -->
+                            <div class="social-login text-center mb-4">
+                                <p class="text-muted mb-3">Sign in with</p>
+                                <div class="d-flex justify-content-center gap-3">
+                                    <a href="#" class="btn btn-outline-primary rounded-circle social-btn">
+                                        <i class="fab fa-google"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-outline-primary rounded-circle social-btn">
+                                        <i class="fab fa-facebook-f"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-outline-primary rounded-circle social-btn">
+                                        <i class="fab fa-linkedin-in"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <!-- Sign Up Link -->
+                            <div class="text-center">
+                                <p class="text-muted">Don't have an account? <a href="{{ url_for('main.register') }}" class="text-primary">Sign up</a></p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Terms and Privacy -->
+                <div class="text-center mb-5">
+                    <small class="text-muted">By signing in, you agree to our <a href="#" class="text-primary">Terms of Service</a> and <a href="#" class="text-primary">Privacy Policy</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+</body>
+</html>

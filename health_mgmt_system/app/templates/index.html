@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthTrack Pro - Health Management & Cost Reporting System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../static/css/index.css">
+    <link rel="shortcut icon" href="../static/images/Helath_track_dashboard.png" type="image/x-icon">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-heartbeat me-2"></i>HealthTrack Pro
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#how-it-works">How It Works</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#testimonials">Testimonials</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                </ul>
+                <div class="ms-lg-3 mt-3 mt-lg-0">
+                    <a href="{{ url_for('main.login') }}" class="btn btn-light">Login</a>
+                    <a href="{{ url_for('main.register') }}" class="btn btn-outline-light">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">Take Control of Your Health & Expenses</h1>
+                    <p class="lead mb-4">HealthTrack Pro empowers patients, doctors, and insurers with AI-driven insights, secure health records, and automated financial tracking.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="btn btn-primary btn-lg px-4">Get Started Free</a>
+                        <a href="#" class="btn btn-outline-primary btn-lg px-4">Watch Demo</a>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <img src="../static/images/Helath_track_dashboard.png" alt="HealthTrack Pro Dashboard" class="img-fluid rounded shadow">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5 bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Powerful Features</h2>
+                <p class="lead text-muted">Everything you need for comprehensive health management</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon bg-primary mb-3">
+                                <i class="fas fa-lock text-white"></i>
+                            </div>
+                            <h5 class="fw-bold">Secure Health Records</h5>
+                            <p class="text-muted">HIPAA-compliant storage for medical history, prescriptions, and lab results.</p>
+                            <ul class="text-start text-muted small">
+                                <li>Role-based access control</li>
+                                <li>End-to-end encryption</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon bg-success mb-3">
+                                <i class="fas fa-money-bill-wave text-white"></i>
+                            </div>
+                            <h5 class="fw-bold">Cost Tracking</h5>
+                            <p class="text-muted">Automate medical expense tracking, claims, and reimbursements.</p>
+                            <ul class="text-start text-muted small">
+                                <li>Real-time cost analytics</li>
+                                <li>Integrated payment gateways</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon bg-info mb-3">
+                                <i class="fas fa-calendar-check text-white"></i>
+                            </div>
+                            <h5 class="fw-bold">Appointment Management</h5>
+                            <p class="text-muted">Never miss a check-up with AI-powered reminders.</p>
+                            <ul class="text-start text-muted small">
+                                <li>SMS/Email notifications</li>
+                                <li>Calendar sync</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon bg-warning mb-3">
+                                <i class="fas fa-brain text-white"></i>
+                            </div>
+                            <h5 class="fw-bold">AI-Powered Insights</h5>
+                            <p class="text-muted">Predictive analytics for disease risks and cost-saving recommendations.</p>
+                            <ul class="text-start text-muted small">
+                                <li>Fraud detection</li>
+                                <li>Budget forecasting</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">How It Works</h2>
+                <p class="lead text-muted">Get started in just 3 simple steps</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="text-center p-4">
+                        <div class="step-number bg-primary rounded-circle mb-3">1</div>
+                        <h4 class="fw-bold">Sign Up & Set Up Profile</h4>
+                        <p>Register as Patient, Doctor, or Insurance Provider. Secure authentication with MFA and OAuth.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="text-center p-4">
+                        <div class="step-number bg-success rounded-circle mb-3">2</div>
+                        <h4 class="fw-bold">Manage Health & Finances</h4>
+                        <p>Upload medical records, track expenses, and process insurance claims seamlessly.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="text-center p-4">
+                        <div class="step-number bg-info rounded-circle mb-3">3</div>
+                        <h4 class="fw-bold">Access Anytime, Anywhere</h4>
+                        <p>Web & mobile-friendly interface with offline mode for remote areas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-5 bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">What Our Users Say</h2>
+                <p class="lead text-muted">Trusted by healthcare professionals and patients worldwide</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="d-flex mb-3">
+                                <img src="../static/images/Doc1.png" alt="Dr.Edwin Johnson" class="rounded-circle me-3">
+                                <div>
+                                    <h5 class="fw-bold mb-0">Dr. Sarah Johnson</h5>
+                                    <p class="text-muted mb-0">Chief Medical Officer</p>
+                                </div>
+                            </div>
+                            <p class="mb-0">"HealthTrack Pro reduced our hospital's administrative workload by 40%! The automated reporting and seamless integration with our EHR system has been a game-changer."</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="d-flex mb-3">
+                                <img src="../static/images/Doc2.png" alt="Michael T." class="rounded-circle me-3">
+                                <div>
+                                    <h5 class="fw-bold mb-0">Michael T.</h5>
+                                    <p class="text-muted mb-0">Insurance Provider</p>
+                                </div>
+                            </div>
+                            <p class="mb-0">"Finally, a system that makes insurance claims effortless! The fraud detection algorithms have saved us thousands in false claims, and our clients love the transparency."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Simple, Transparent Pricing</h2>
+                <p class="lead text-muted">Choose the plan that fits your needs</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-light text-center py-4">
+                            <h4 class="fw-bold">Free</h4>
+                            <h2 class="fw-bold">$0</h2>
+                            <p class="text-muted mb-0">/month</p>
+                        </div>
+                        <div class="card-body p-4">
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Basic Records</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Appointment Scheduling</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Email Notifications</li>
+                                <li class="mb-2 text-muted"><i class="fas fa-times me-2"></i> Advanced Analytics</li>
+                                <li class="mb-2 text-muted"><i class="fas fa-times me-2"></i> API Access</li>
+                            </ul>
+                            <a href="#" class="btn btn-outline-primary w-100">Get Started</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-lg h-100">
+                        <div class="card-header bg-primary text-white text-center py-4">
+                            <h4 class="fw-bold">Pro</h4>
+                            <h2 class="fw-bold">$9.99</h2>
+                            <p class="mb-0">/month</p>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="badge bg-warning text-dark mb-3">Most Popular</div>
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Everything in Free</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Advanced Analytics</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Full EHR Access</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Claims Processing</li>
+                                <li class="mb-2 text-muted"><i class="fas fa-times me-2"></i> Dedicated Support</li>
+                            </ul>
+                            <a href="#" class="btn btn-primary w-100">Start Free Trial</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-light text-center py-4">
+                            <h4 class="fw-bold">Enterprise</h4>
+                            <h2 class="fw-bold">Custom</h2>
+                            <p class="text-muted mb-0">Tailored for your organization</p>
+                        </div>
+                        <div class="card-body p-4">
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Everything in Pro</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Dedicated Support</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> API Integrations</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Bulk Data Import</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Custom Reporting</li>
+                            </ul>
+                            <a href="#" class="btn btn-outline-primary w-100">Contact Sales</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="py-5 bg-primary text-white">
+        <div class="container text-center">
+            <h2 class="fw-bold mb-4">Ready to Transform Healthcare Management?</h2>
+            <p class="lead mb-5">Join thousands of healthcare professionals using HealthTrack Pro today.</p>
+            <a href="#" class="btn btn-light btn-lg px-5">Start Your Free Trial</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="bg-dark text-white py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h4 class="fw-bold mb-4"><i class="fas fa-heartbeat me-2"></i>HealthTrack Pro</h4>
+                    <p>Comprehensive health management and cost reporting system for patients, doctors, and insurers.</p>
+                    <div class="social-icons mt-4">
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook fa-lg"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-linkedin fa-lg"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-instagram fa-lg"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-4">
+                    <h5 class="fw-bold mb-4">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="text-white-50">Features</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50">How It Works</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50">Pricing</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50">Testimonials</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50">Blog</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-3 col-md-4">
+                    <h5 class="fw-bold mb-4">Support</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="text-white-50">Help Center</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50">Live Chat</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50">Contact Us</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50">FAQs</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-3 col-md-4">
+                    <h5 class="fw-bold mb-4">Contact</h5>
+                    <ul class="list-unstyled text-white-50">
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> 123 Health St, Medical City</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2"></i> (123) 456-7890</li>
+                        <li class="mb-2"><i class="fas fa-envelope me-2"></i> support@healthtrackpro.com</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <hr class="my-4 bg-secondary">
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0 text-white-50">&copy; 2023 HealthTrack Pro. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white-50 me-3">Privacy Policy</a>
+                    <a href="#" class="text-white-50 me-3">Terms of Service</a>
+                    <a href="#" class="text-white-50">HIPAA Compliance</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="index.js"></script>
+</body>
+</html>
