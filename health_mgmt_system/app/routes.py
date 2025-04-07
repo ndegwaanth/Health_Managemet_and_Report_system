@@ -4,7 +4,8 @@ from .models import User
 from .forms import Registration, LoginForm
 from flask_login import LoginManager, login_user, logout_user, login_required, login_remembered, current_user
 from flask_session import Session
-
+import datetime
+from . import health_metrics_collection, appointments_collection
 
 main_bp = Blueprint('main', __name__)
 
@@ -24,9 +25,6 @@ def logout():
     flash("You have been logged out successfully.")
     return redirect(url_for('main.login'))
 
-@main_bp.route('/homepage')
-def homepage():
-    return render_template('homepage.html')
 
 
 @main_bp.route("/signup", methods=["POST", "GET"])
@@ -105,6 +103,63 @@ def login():
     
     return render_template('login.html', form=form)
 
+@main_bp.route('/homepage')
+@login_required
+def homepage():
+    # Fetch health metrics from MongoDB
+    health_metrics = health_metrics_collection.find_one(
+        {"patient_id": current_user.id},
+        sort=[("date", -1)]  # Get the most recent entry
+    )
+    
+    # Fetch recent appointments
+    appointments = list(appointments_collection.find(
+        {"patient_id": current_user.id},
+        sort=[("date_time", -1)],
+        limit=3
+    ))
+    
+    return render_template(
+        'homepage.html',
+        health_metrics=health_metrics,
+        appointments=appointments
+    )
+
+@main_bp.route('/health-metrics')
+@login_required
+def health_metrics():
+    # Fetch all health metrics for the user
+    metrics = list(health_metrics_collection.find(
+        {"patient_id": current_user.id},
+        sort=[("date", -1)]
+    ))
+    
+    return render_template('health_metrics.html', metrics=metrics)
+
+@main_bp.route('/add-health-metric', methods=['POST'])
+@login_required
+def add_health_metric():
+    try:
+        metric_data = {
+            "patient_id": current_user.id,
+            "date": datetime.strptime(request.form['date'], '%Y-%m-%d'),
+            "blood_pressure": {
+                "systolic": int(request.form['systolic']),
+                "diastolic": int(request.form['diastolic'])
+            },
+            "heart_rate": int(request.form['heart_rate']),
+            "blood_sugar": int(request.form['blood_sugar']),
+            "weight": float(request.form['weight']),
+            "notes": request.form['notes'],
+            "created_at": datetime.now()
+        }
+        
+        health_metrics_collection.insert_one(metric_data)
+        flash('Health metric added successfully!', 'success')
+    except Exception as e:
+        flash(f'Error adding health metric: {str(e)}', 'danger')
+    
+    return redirect(url_for('main.health_metrics'))
 
 @main_bp.route('/medical/records')
 def medical_records():
@@ -143,9 +198,6 @@ def dashboard():
     return render_template("dashboard.html")
 
 
-@main_bp.route('/patient/health/metrics')
-def health_metrics():
-    return render_template("health_metrics.html")
 
 @main_bp.route('/medications')
 def medications():

@@ -44,6 +44,17 @@ Mongo_url = os.getenv("MONGODB")
 client = MongoClient(Mongo_url)
 db = client['Users']
 collection = db['users-info']
+medical_expenses = db['expenses']
+medical_record_info = db['med-records']
+health_metrics_collection = db['health_metrics']
+appointments_collection = db['appointments']
+pat_notification = db['pat-notification']
+medications = db['medication-col']
+claims = db['claims']
+insurance_provider = db['insurance-provide']
+doctors = db['doctors']
+patients = db['patient']
+
 
 bcrypt = Bcrypt(app)
 
