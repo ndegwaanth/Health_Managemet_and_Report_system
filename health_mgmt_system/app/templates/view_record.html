@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}{{ record.title }} | HealthTrack Pro{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">{{ record.title }}</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('main.medical_records') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Records
+                    </a>
+                    <a href="{{ url_for('main.edit_record', record_id=record._id) }}" class="btn btn-primary">
+                        <i class="fas fa-edit me-1"></i> Edit Record
+                    </a>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Record Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6>Record Type</h6>
+                                <p>
+                                    <span class="badge record-type-badge badge-{{ record.record_type }}">
+                                        {{ record.record_type|replace('_', ' ')|title }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <h6>Date</h6>
+                                <p>{{ record.date.strftime('%Y-%m-%d') if record.date else 'Not specified' }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <h6>Doctor</h6>
+                                <p>
+                                    {% if record.doctor_id %}
+                                        Dr. {{ record.doctor_id.last_name }}, {{ record.doctor_id.specialization }}
+                                    {% else %}
+                                        Not specified
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <h6>Facility</h6>
+                                <p>{{ record.facility if record.facility else 'Not specified' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6>Status</h6>
+                                <p>
+                                    <span class="badge status-badge status-{{ record.status }}">
+                                        {{ record.status|title }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <h6>Priority</h6>
+                                <p class="{% if record.priority == 'high' %}priority-high{% elif record.priority == 'urgent' %}priority-urgent{% endif %}">
+                                    {{ record.priority|title }}
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <h6>Shared with Doctor</h6>
+                                <p>{{ 'Yes' if record.share_with_doctor else 'No' }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <h6>Last Updated</h6>
+                                <p>{{ record.updated_at.strftime('%Y-%m-%d %H:%M') if record.updated_at else 'Not specified' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Description</h6>
+                        <p>{{ record.description if record.description else 'No description provided' }}</p>
+                    </div>
+                    {% if record.attachments %}
+                    <div class="mb-3">
+                        <h6>Attachments</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for attachment in record.attachments %}
+                            <a href="{{ url_for('static', filename=attachment.filepath) }}" 
+                               class="badge bg-primary text-white text-decoration-none" 
+                               target="_blank"
+                               data-bs-toggle="tooltip" 
+                               title="{{ attachment.original_name }} ({{ attachment.size|filesizeformat }})">
+                                <i class="fas {% if attachment.filepath.endswith('.pdf') %}fa-file-pdf{% elif attachment.filepath.endswith(('.png', '.jpg', '.jpeg', '.gif')) %}fa-file-image{% elif attachment.filepath.endswith(('.doc', '.docx')) %}fa-file-word{% else %}fa-file{% endif %} me-1"></i>
+                                {{ attachment.original_name|truncate(20) }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if record.notes %}
+                    <div class="mb-3">
+                        <h6>Additional Notes</h6>
+                        <p>{{ record.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

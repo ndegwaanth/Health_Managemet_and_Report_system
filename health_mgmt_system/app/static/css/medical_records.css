@@ -1,0 +1,146 @@
+/* Record Type Badges */
+.badge-record-type-badge {
+    font-size: 0.8rem;
+    padding: 0.35em 0.65em;
+    text-transform: capitalize;
+}
+
+.badge-record-type-badge.badge-diagnosis {
+    background-color: #6f42c1;
+}
+
+.badge-record-type-badge.badge-lab_result {
+    background-color: #20c997;
+}
+
+.badge-record-type-badge.badge-prescription {
+    background-color: #fd7e14;
+}
+
+.badge-record-type-badge.badge-procedure {
+    background-color: #6610f2;
+}
+
+.badge-record-type-badge.badge-vaccination {
+    background-color: #198754;
+}
+
+.badge-record-type-badge.badge-other {
+    background-color: #6c757d;
+}
+
+/* Status Badges */
+.status-badge {
+    font-size: 0.8rem;
+    padding: 0.35em 0.65em;
+}
+
+.status-badge.status-active {
+    background-color: #0d6efd;
+}
+
+.status-badge.status-resolved {
+    background-color: #198754;
+}
+
+.status-badge.status-chronic {
+    background-color: #6c757d;
+}
+
+.status-badge.status-monitoring {
+    background-color: #ffc107;
+    color: #000;
+}
+
+/* Priority Indicators */
+.priority-high {
+    color: #fd7e14;
+    font-weight: 500;
+}
+
+.priority-urgent {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Record Cards */
+.record-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border-radius: 0.5rem;
+}
+
+.record-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.record-card .card-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.record-card .card-text {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Table Styles */
+#recordsTableBody tr {
+    cursor: pointer;
+}
+
+#recordsTableBody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.action-buttons .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    margin-right: 0.25rem;
+}
+
+/* Attachment Badges */
+.attachment-badge {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .record-card {
+        margin-bottom: 1rem;
+    }
+    
+    #recordsTable {
+        font-size: 0.9rem;
+    }
+    
+    .action-buttons .btn {
+        margin-bottom: 0.25rem;
+    }
+}
+
+/* Loading State */
+.loading-placeholder {
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Modal Adjustments */
+#recordDetailModal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Filter Form */
+#filterForm .form-control, #filterForm .form-select {
+    font-size: 0.9rem;
+}
+
+/* View Options */
+.view-option.active {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}

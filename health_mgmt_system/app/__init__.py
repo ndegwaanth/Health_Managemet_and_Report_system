@@ -33,7 +33,9 @@ app.config.update({
     'SESSION_COOKIE_PATH': 'flask_session/Sessions',
     'PERMANENT_SESSION_LIFETIME': timedelta(days=1)
 })
-
+# Configure file uploads
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB limit
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/uploads')
 
 # Initialize extensions in correct order
 csrf = CSRFProtect(app)
