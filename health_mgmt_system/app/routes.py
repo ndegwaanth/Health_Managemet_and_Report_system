@@ -484,15 +484,452 @@ def view_record(record_id):
         flash("Record not found or you don't have permission to view it", "danger")
         return redirect(url_for('main.medical_records'))
 
+@main_bp.route('/medications', methods=['GET', 'POST'])
+@login_required
+def medications():
+    from bson import ObjectId
+    from datetime import datetime
+    from flask import jsonify
+    from . import medications as med_collection, doctors
+    
+    if request.method == 'GET':
+        try:
+            # Get and validate parameters
+            page = max(1, int(request.args.get('page', 1)))
+            per_page = min(50, max(1, int(request.args.get('perPage', 10))))
+            
+            filters = {
+                'status': request.args.get('status', ''),
+                'type': request.args.get('type', ''),
+                'search': request.args.get('search', '')
+            }
+
+            # Build base query
+            query = {"patient_id": current_user.id}
+            
+            # Apply filters
+            if filters['status']:
+                query["status"] = filters['status']
+            
+            if filters['type']:
+                query["type"] = filters['type']
+            
+            if filters['search']:
+                search = filters['search'].strip()
+                query["$or"] = [
+                    {"name": {"$regex": search, "$options": "i"}},
+                    {"dosage": {"$regex": search, "$options": "i"}},
+                    {"instructions": {"$regex": search, "$options": "i"}}
+                ]
+
+            # Get total count
+            total = med_collection.count_documents(query)
+            
+            # Calculate pagination
+            total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+            page = max(1, min(page, total_pages))
+            skip = (page - 1) * per_page
+
+            # Get medications with doctor info
+            pipeline = [
+                {"$match": query},
+                {"$sort": {"start_date": -1}},
+                {"$skip": skip},
+                {"$limit": per_page},
+                {"$lookup": {
+                    "from": "doctors",
+                    "localField": "prescribing_doctor",
+                    "foreignField": "_id",
+                    "as": "prescribing_doctor"
+                }},
+                {"$unwind": {"path": "$prescribing_doctor", "preserveNullAndEmptyArrays": True}}
+            ]
+
+            medications = list(med_collection.aggregate(pipeline))
+            
+            # Convert ObjectId and dates
+            for med in medications:
+                med['_id'] = str(med['_id'])
+                if 'prescribing_doctor' in med and med['prescribing_doctor']:
+                    med['prescribing_doctor']['_id'] = str(med['prescribing_doctor']['_id'])
+                if 'start_date' in med and isinstance(med['start_date'], datetime):
+                    med['start_date'] = med['start_date'].isoformat()
+                if 'end_date' in med and isinstance(med['end_date'], datetime):
+                    med['end_date'] = med['end_date'].isoformat()
+
+            # Return appropriate response
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({
+                    "medications": medications,
+                    "total": total,
+                    "page": page,
+                    "per_page": per_page,
+                    "total_pages": total_pages
+                })
+            
+            # Get doctors list for the form
+            doctors_list = list(doctors.find({}, {
+                "_id": 1,
+                "first_name": 1,
+                "last_name": 1,
+                "specialization": 1
+            }))
+            
+            return render_template('medications.html', 
+                                medications=medications,
+                                doctors=doctors_list,
+                                pagination={
+                                    "page": page,
+                                    "per_page": per_page,
+                                    "total": total,
+                                    "total_pages": total_pages
+                                },
+                                filters=filters)
+
+        except Exception as e:
+            current_app.logger.error(f"Error in medications: {str(e)}", exc_info=True)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({"error": str(e)}), 500
+            flash("An error occurred while loading medications", "danger")
+            return redirect(url_for('main.homepage'))
+    
+    elif request.method == 'POST':
+        try:
+            # Validate required fields
+            required_fields = ['name', 'type', 'dosage', 'frequency', 'status', 'start_date']
+            if not all(field in request.json for field in required_fields):
+                return jsonify({"error": "Missing required fields"}), 400
+            
+            # Create medication data
+            medication_data = {
+                "patient_id": current_user.id,
+                "name": request.json['name'],
+                "type": request.json['type'],
+                "dosage": request.json['dosage'],
+                "frequency": request.json['frequency'],
+                "status": request.json['status'],
+                "start_date": datetime.strptime(request.json['start_date'], '%Y-%m-%d'),
+                "end_date": datetime.strptime(request.json['end_date'], '%Y-%m-%d') if request.json.get('end_date') else None,
+                "instructions": request.json.get('instructions'),
+                "prescribing_doctor": ObjectId(request.json['prescribing_doctor']) if request.json.get('prescribing_doctor') else None,
+                "created_at": datetime.now(),
+                "updated_at": datetime.now()
+            }
+
+            # Insert into MongoDB
+            result = med_collection.insert_one(medication_data)
+            
+            # Return success response
+            return jsonify({
+                "success": True,
+                "message": "Medication added successfully",
+                "medication_id": str(result.inserted_id)
+            })
+
+        except ValueError as ve:
+            return jsonify({"error": str(ve)}), 400
+        except Exception as e:
+            current_app.logger.error(f"Error adding medication: {str(e)}", exc_info=True)
+            return jsonify({"error": str(e)}), 500
+
 
 @main_bp.route("/appointment")
 def appointments():
     return render_template("appointments.html")
 
-
-@main_bp.route("/expenses")
+@main_bp.route("/expenses", methods=['GET', 'POST'])
+@login_required
 def expenses():
-    return render_template("expenses.html")
+    from bson import ObjectId
+    from datetime import datetime
+    from flask import jsonify
+    from . import medical_expenses, insurance_provider
+    
+    try:
+        if request.method == 'POST':
+            # Handle POST request (adding new expense)
+            if not request.is_json:
+                return jsonify({"error": "Request must be JSON"}), 400
+            
+            data = request.get_json()
+            
+            # Validate required fields
+            required_fields = ['date', 'category', 'amount', 'description']
+            if not all(field in data for field in required_fields):
+                return jsonify({
+                    "error": "Missing required fields",
+                    "required_fields": required_fields,
+                    "received_fields": list(data.keys())
+                }), 400
+            
+            try:
+                # Prepare expense data
+                expense_data = {
+                    "patient_id": current_user.id,
+                    "date": datetime.strptime(data['date'], '%Y-%m-%d'),
+                    "category": data['category'],
+                    "amount": float(data['amount']),
+                    "description": data['description'],
+                    "provider": data.get('provider', ''),
+                    "status": data.get('status', 'pending'),
+                    "insurance_provider_id": ObjectId(data['insurance_provider_id']) if data.get('insurance_provider_id') else None,
+                    "claim_submitted": data.get('claim_submitted', False),
+                    "reimbursement_amount": float(data.get('reimbursement_amount', 0)),
+                    "notes": data.get('notes', ''),
+                    "created_at": datetime.now(),
+                    "updated_at": datetime.now()
+                }
+                
+                # Insert into MongoDB
+                result = medical_expenses.insert_one(expense_data)
+                
+                return jsonify({
+                    "success": True,
+                    "message": "Expense added successfully",
+                    "expense_id": str(result.inserted_id)
+                }), 201
+                
+            except ValueError as e:
+                return jsonify({"error": f"Invalid data format: {str(e)}"}), 400
+            except Exception as e:
+                return jsonify({"error": f"Data processing error: {str(e)}"}), 400
+
+        else:
+            # Handle GET request (displaying expenses)
+            # Get and validate parameters
+            page = max(1, int(request.args.get('page', 1)))
+            per_page = min(50, max(1, int(request.args.get('perPage', 10))))
+            
+            filters = {
+                'category': request.args.get('category', ''),
+                'date_from': request.args.get('date_from', ''),
+                'date_to': request.args.get('date_to', ''),
+                'search': request.args.get('search', ''),
+                'sort': request.args.get('sort', 'date-desc'),
+                'status': request.args.get('status', '')
+            }
+
+            # Build base query
+            query = {"patient_id": current_user.id}
+            
+            # Apply filters
+            if filters['category']:
+                query["category"] = filters['category']
+            
+            if filters['status']:
+                query["status"] = filters['status']
+            
+            if filters['date_from'] and filters['date_to']:
+                try:
+                    date_from = datetime.strptime(filters['date_from'], '%Y-%m-%d')
+                    date_to = datetime.strptime(filters['date_to'], '%Y-%m-%d')
+                    query["date"] = {"$gte": date_from, "$lte": date_to}
+                except ValueError:
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return jsonify({"error": "Invalid date format"}), 400
+                    flash("Invalid date format", "danger")
+            
+            if filters['search']:
+                search = filters['search'].strip()
+                query["$or"] = [
+                    {"description": {"$regex": search, "$options": "i"}},
+                    {"provider": {"$regex": search, "$options": "i"}}
+                ]
+
+            # Sorting
+            sort_mapping = {
+                'date-desc': [("date", -1)],
+                'date-asc': [("date", 1)],
+                'amount-desc': [("amount", -1)],
+                'amount-asc': [("amount", 1)]
+            }
+            sort = sort_mapping.get(filters['sort'], [("date", -1)])
+
+            # Get total count
+            total = medical_expenses.count_documents(query)
+            
+            # Calculate pagination
+            total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+            page = max(1, min(page, total_pages))
+            skip = (page - 1) * per_page
+
+            # Get expenses with insurance info
+            pipeline = [
+                {"$match": query},
+                {"$sort": dict(sort)},
+                {"$skip": skip},
+                {"$limit": per_page},
+                {"$lookup": {
+                    "from": "insurance-provide",
+                    "localField": "insurance_provider_id",
+                    "foreignField": "_id",
+                    "as": "insurance_provider"
+                }},
+                {"$unwind": {"path": "$insurance_provider", "preserveNullAndEmptyArrays": True}}
+            ]
+
+            expenses = list(medical_expenses.aggregate(pipeline))
+            
+            # Convert ObjectId and dates
+            for expense in expenses:
+                expense['_id'] = str(expense['_id'])
+                if 'insurance_provider' in expense and expense['insurance_provider']:
+                    expense['insurance_provider']['_id'] = str(expense['insurance_provider']['_id'])
+                if 'date' in expense and isinstance(expense['date'], datetime):
+                    expense['date'] = expense['date'].strftime('%Y-%m-%d')
+                if 'created_at' in expense and isinstance(expense['created_at'], datetime):
+                    expense['created_at'] = expense['created_at'].isoformat()
+
+            # Return appropriate response
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({
+                    "expenses": expenses,
+                    "total": total,
+                    "page": page,
+                    "per_page": per_page,
+                    "total_pages": total_pages,
+                    "filters": filters
+                })
+            
+            # Get insurance providers for the form
+            insurance_providers = list(insurance_provider.find({}, {
+                "_id": 1,
+                "name": 1,
+                "plan_name": 1
+            }))
+            
+            return render_template('expenses.html', 
+                                expenses=expenses,
+                                insurance_providers=insurance_providers,
+                                pagination={
+                                    "page": page,
+                                    "per_page": per_page,
+                                    "total": total,
+                                    "total_pages": total_pages
+                                },
+                                filters=filters)
+
+    except Exception as e:
+        current_app.logger.error(f"Error in expenses route: {str(e)}", exc_info=True)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({"error": "Server error processing request"}), 500
+        flash("An error occurred while processing your request", "danger")
+        return redirect(url_for('main.homepage'))
+
+@main_bp.route('/expenses/export')
+@login_required
+def export_expenses():
+    from bson import ObjectId
+    from datetime import datetime
+    from flask import send_file
+    from io import BytesIO
+    import pandas as pd
+    from . import medical_expenses
+    
+    try:
+        # Get filters from query parameters
+        filters = {
+            'category': request.args.get('category', ''),
+            'status': request.args.get('status', ''),
+            'date_from': request.args.get('date_from', ''),
+            'date_to': request.args.get('date_to', ''),
+            'search': request.args.get('search', ''),
+            'format': request.args.get('format', 'csv')
+        }
+
+        # Build query
+        query = {"patient_id": current_user.id}
+        
+        if filters['category']:
+            query["category"] = filters['category']
+        
+        if filters['status']:
+            query["status"] = filters['status']
+        
+        if filters['date_from'] and filters['date_to']:
+            try:
+                date_from = datetime.strptime(filters['date_from'], '%Y-%m-%d')
+                date_to = datetime.strptime(filters['date_to'], '%Y-%m-%d')
+                query["date"] = {"$gte": date_from, "$lte": date_to}
+            except ValueError:
+                return jsonify({"error": "Invalid date format"}), 400
+        
+        if filters['search']:
+            search = filters['search'].strip()
+            query["$or"] = [
+                {"description": {"$regex": search, "$options": "i"}},
+                {"provider": {"$regex": search, "$options": "i"}}
+            ]
+
+        # Get all matching expenses
+        expenses = list(medical_expenses.find(query))
+        
+        if not expenses:
+            return jsonify({"error": "No expenses found matching your criteria"}), 404
+        
+        # Convert to DataFrame
+        df = pd.DataFrame(expenses)
+        
+        # Clean up data
+        df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
+        df['amount'] = df['amount'].apply(lambda x: f"${x:.2f}")
+        df['reimbursement_amount'] = df['reimbursement_amount'].apply(lambda x: f"${x:.2f}" if pd.notnull(x) else '')
+        df['insurance_provider'] = df['insurance_provider_id'].apply(lambda x: "None" if pd.isnull(x) else "Yes")
+        
+        # Select and rename columns
+        df = df[[
+            'date', 'category', 'description', 'provider', 
+            'amount', 'status', 'insurance_provider', 
+            'reimbursement_amount', 'notes'
+        ]]
+        
+        df.columns = [
+            'Date', 'Category', 'Description', 'Provider',
+            'Amount', 'Status', 'Insurance Provider',
+            'Reimbursement Amount', 'Notes'
+        ]
+        
+        # Handle different export formats
+        if filters['format'] == 'csv':
+            output = BytesIO()
+            df.to_csv(output, index=False)
+            output.seek(0)
+            return send_file(
+                output,
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name=f'medical_expenses_{datetime.now().strftime("%Y%m%d")}.csv'
+            )
+        elif filters['format'] == 'excel':
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                df.to_excel(writer, index=False, sheet_name='Expenses')
+                writer.book.close()
+            output.seek(0)
+            return send_file(
+                output,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name=f'medical_expenses_{datetime.now().strftime("%Y%m%d")}.xlsx'
+            )
+        elif filters['format'] == 'pdf':
+            # PDF export would require additional libraries like reportlab
+            # For simplicity, we'll just return a CSV in this example
+            output = BytesIO()
+            df.to_csv(output, index=False)
+            output.seek(0)
+            return send_file(
+                output,
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name=f'medical_expenses_{datetime.now().strftime("%Y%m%d")}.csv'
+            )
+        else:
+            return jsonify({"error": "Invalid export format"}), 400
+    
+    except Exception as e:
+        current_app.logger.error(f"Error exporting expenses: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
 
 @main_bp.route("/profile/settings")
 def settings():
@@ -515,12 +952,6 @@ def patients():
 @main_bp.route("/dashboard")
 def dashboard():
     return render_template("dashboard.html")
-
-
-
-@main_bp.route('/medications')
-def medications():
-    return render_template("medications.html")
 
 
 @main_bp.route("/appointment/new-appointment")

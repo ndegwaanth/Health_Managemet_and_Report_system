@@ -1,0 +1,79 @@
+/* Medication Status Badges */
+.medication-status {
+    font-size: 0.8rem;
+    padding: 0.35em 0.65em;
+    border-radius: 0.25rem;
+}
+
+.status-active {
+    background-color: #198754;
+    color: white;
+}
+
+.status-completed {
+    background-color: #6c757d;
+    color: white;
+}
+
+.status-on_hold {
+    background-color: #ffc107;
+    color: #000;
+}
+
+/* Medication Type Indicators */
+.medication-type {
+    font-weight: 500;
+}
+
+.type-tablet {
+    color: #0d6efd;
+}
+
+.type-capsule {
+    color: #fd7e14;
+}
+
+.type-liquid {
+    color: #20c997;
+}
+
+.type-injection {
+    color: #dc3545;
+}
+
+/* Table Styles */
+#medicationsTable {
+    font-size: 0.9rem;
+}
+
+#medicationsTable tr {
+    cursor: pointer;
+}
+
+#medicationsTable tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Modal Styles */
+#addMedicationModal .form-label.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    #medicationsTable {
+        font-size: 0.8rem;
+    }
+    
+    .table-responsive {
+        border: 0;
+    }
+}
+
+/* Action Buttons */
+.action-buttons .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    margin-right: 0.25rem;
+}

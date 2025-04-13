@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Medication Management | HealthTrack Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/medications.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Medication Management</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMedicationModal">
+                        <i class="fas fa-plus me-1"></i> Add Medication
+                    </button>
+                </div>
+            </div>
+
+            <!-- Medication Filters -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Filter Medications</h5>
+                </div>
+                <div class="card-body">
+                    <form id="medicationFilterForm">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="statusFilter" class="form-label">Status</label>
+                                <select class="form-select" id="statusFilter">
+                                    <option value="">All Statuses</option>
+                                    <option value="active">Active</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="on_hold">On Hold</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="typeFilter" class="form-label">Medication Type</label>
+                                <select class="form-select" id="typeFilter">
+                                    <option value="">All Types</option>
+                                    <option value="tablet">Tablet</option>
+                                    <option value="capsule">Capsule</option>
+                                    <option value="liquid">Liquid</option>
+                                    <option value="injection">Injection</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="searchInput" class="form-label">Search</label>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search medications...">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Medications Table -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="medicationsTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Dosage</th>
+                                    <th>Frequency</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="medicationsTableBody">
+                                <!-- Medications will be loaded here via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav aria-label="Medications pagination">
+                        <ul id="medicationPagination" class="pagination justify-content-center mt-3">
+                            <!-- Pagination will be loaded here via JavaScript -->
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Medication Modal -->
+<div class="modal fade" id="addMedicationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Medication</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addMedicationForm">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="medicationName" class="form-label required">Medication Name</label>
+                            <input type="text" class="form-control" id="medicationName" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="medicationType" class="form-label required">Type</label>
+                            <select class="form-select" id="medicationType" name="type" required>
+                                <option value="" selected disabled>Select type</option>
+                                <option value="tablet">Tablet</option>
+                                <option value="capsule">Capsule</option>
+                                <option value="liquid">Liquid</option>
+                                <option value="injection">Injection</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="dosage" class="form-label required">Dosage</label>
+                            <input type="text" class="form-control" id="dosage" name="dosage" placeholder="e.g., 500mg" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="frequency" class="form-label required">Frequency</label>
+                            <input type="text" class="form-control" id="frequency" name="frequency" placeholder="e.g., 2 times daily" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="status" class="form-label required">Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="active" selected>Active</option>
+                                <option value="completed">Completed</option>
+                                <option value="on_hold">On Hold</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="startDate" class="form-label required">Start Date</label>
+                            <input type="date" class="form-control" id="startDate" name="start_date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate" name="end_date">
+                        </div>
+                        <div class="col-12">
+                            <label for="instructions" class="form-label">Special Instructions</label>
+                            <textarea class="form-control" id="instructions" name="instructions" rows="3"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label for="prescribingDoctor" class="form-label">Prescribing Doctor</label>
+                            <select class="form-select" id="prescribingDoctor" name="prescribing_doctor">
+                                <option value="" selected>Select doctor (optional)</option>
+                                {% for doctor in doctors %}
+                                <option value="{{ doctor._id }}">Dr. {{ doctor.last_name }}, {{ doctor.specialization }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Medication</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Medication Details Modal -->
+<div class="modal fade" id="medicationDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="medicationDetailsTitle">Medication Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="medicationDetailsContent">
+                <!-- Details will be loaded here via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="editMedicationBtn">Edit</button>
+                <button type="button" class="btn btn-danger" id="deleteMedicationBtn">Delete</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/medications.js') }}"></script>
+{% endblock %}
