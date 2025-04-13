@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Reports | HealthTrack Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Financial Reports</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="exportPdf">
+                    <i class="fas fa-file-pdf me-1"></i> Export PDF
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="exportExcel">
+                    <i class="fas fa-file-excel me-1"></i> Export Excel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% if not has_data %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i> No financial data available yet. 
+        Start by <a href="{{ url_for('main.expenses') }}">adding expenses</a> to generate reports.
+    </div>
+    {% else %}
+    <!-- Hidden data containers for JavaScript -->
+    <div id="expenseData" 
+         data-expenses='{{ expenses|tojson|safe }}'
+         data-category-count="{{ expenses_by_category|length }}"
+         style="display: none;"></div>
+    
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Total Expenses</h6>
+                            <h2 class="card-text" id="totalExpenses">${{ "%.2f"|format(total_expenses) }}</h2>
+                        </div>
+                        <i class="fas fa-dollar-sign fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Average Monthly</h6>
+                            <h2 class="card-text">${{ "%.2f"|format(total_expenses/12) }}</h2>
+                        </div>
+                        <i class="fas fa-calendar-alt fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Categories</h6>
+                            <h2 class="card-text">{{ expenses_by_category|length }}</h2>
+                        </div>
+                        <i class="fas fa-tags fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Expenses by Category</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart" 
+                            height="300"
+                            data-labels='{{ expenses_by_category|map(attribute="_id")|list|tojson|safe }}'
+                            data-values='{{ expenses_by_category|map(attribute="total")|list|tojson|safe }}'>
+                    </canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Monthly Trends</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyTrendChart" 
+                            height="300"
+                            data-labels='{{ monthly_trends|map(attribute="_id.month")|list|tojson|safe }}'
+                            data-values='{{ monthly_trends|map(attribute="total")|list|tojson|safe }}'>
+                    </canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Insurance Coverage -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Insurance Coverage</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="insuranceTable">
+                            <thead>
+                                <tr>
+                                    <th>Provider</th>
+                                    <th>Claims</th>
+                                    <th>Total Amount</th>
+                                    <th>Reimbursed</th>
+                                    <th>Coverage %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for coverage in insurance_coverage %}
+                                <tr>
+                                    <td>Provider {{ loop.index }}</td>
+                                    <td>{{ coverage.total_claims }}</td>
+                                    <td>${{ "%.2f"|format(coverage.total_amount) }}</td>
+                                    <td>${{ "%.2f"|format(coverage.total_reimbursed) }}</td>
+                                    <td>{{ "%.1f"|format((coverage.total_reimbursed/coverage.total_amount)*100) if coverage.total_amount > 0 else 0 }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Load required libraries from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- Load our custom reports script -->
+<script src="{{ url_for('static', filename='js/reports.js') }}"></script>
+
+<!-- Initialize global jsPDF reference -->
+<script>
+    window.jsPDF = window.jspdf.jsPDF;
+</script>
+{% endblock %}

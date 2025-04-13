@@ -931,13 +931,73 @@ def export_expenses():
         current_app.logger.error(f"Error exporting expenses: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
+
+@main_bp.route("/finance/reports")
+@login_required
+def reports():
+    from datetime import datetime
+    from . import medical_expenses
+    
+    try:
+        # Get basic report data
+        total_expenses = medical_expenses.aggregate([
+            {"$match": {"patient_id": current_user.id}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).next().get('total', 0)
+        
+        # Get expenses by category
+        expenses_by_category = list(medical_expenses.aggregate([
+            {"$match": {"patient_id": current_user.id}},
+            {"$group": {"_id": "$category", "total": {"$sum": "$amount"}}},
+            {"$sort": {"total": -1}}
+        ]))
+        
+        # Get monthly trends
+        monthly_trends = list(medical_expenses.aggregate([
+            {"$match": {"patient_id": current_user.id}},
+            {"$project": {
+                "year": {"$year": "$date"},
+                "month": {"$month": "$date"},
+                "amount": 1
+            }},
+            {"$group": {
+                "_id": {"year": "$year", "month": "$month"},
+                "total": {"$sum": "$amount"}
+            }},
+            {"$sort": {"_id.year": 1, "_id.month": 1}},
+            {"$limit": 12}
+        ]))
+        
+        # Get insurance coverage
+        insurance_coverage = list(medical_expenses.aggregate([
+            {"$match": {"patient_id": current_user.id, "insurance_provider_id": {"$exists": True}}},
+            {"$group": {
+                "_id": "$insurance_provider_id",
+                "total_claims": {"$sum": 1},
+                "total_amount": {"$sum": "$amount"},
+                "total_reimbursed": {"$sum": "$reimbursement_amount"}
+            }}
+        ]))
+        
+        return render_template("reports.html",
+                            total_expenses=total_expenses,
+                            expenses_by_category=expenses_by_category,
+                            monthly_trends=monthly_trends,
+                            insurance_coverage=insurance_coverage,
+                            has_data=total_expenses > 0)
+        
+    except StopIteration:  # No data in database
+        return render_template("reports.html", has_data=False)
+    except Exception as e:
+        current_app.logger.error(f"Error generating reports: {str(e)}", exc_info=True)
+        flash("An error occurred while generating reports", "danger")
+        return render_template("reports.html", has_data=False)
+
+
 @main_bp.route("/profile/settings")
 def settings():
     return render_template("settings.html")
 
-@main_bp.route("/finance/reports")
-def reports():
-    return render_template("reports.html")
 
 @main_bp.route("/profile/view")
 def profile():
