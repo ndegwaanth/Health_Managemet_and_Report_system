@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}New Appointment | HealthTrack Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_appointment.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid appointment-container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card appointment-card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-calendar-plus me-2"></i> Schedule New Appointment</h3>
+                </div>
+                <div class="card-body">
+                    <form id="appointmentForm" method="POST" action="{{ url_for('main.new_appointment') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <!-- Doctor Selection -->
+                        <div class="mb-4">
+                            <h5 class="section-title"><i class="fas fa-user-md me-2"></i>Select Doctor</h5>
+                            <div class="doctor-selection">
+                                {% for doctor in doctors %}
+                                <div class="doctor-card" data-id="{{ doctor._id }}">
+                                    <div class="doctor-image">
+                                        <img src="{{ doctor.profile_picture or url_for('static', filename='images/default-doctor.png') }}" 
+                                             alt="Dr. {{ doctor.last_name }}" class="img-fluid rounded-circle">
+                                    </div>
+                                    <div class="doctor-info">
+                                        <h6>Dr. {{ doctor.last_name }}</h6>
+                                        <p class="specialization">{{ doctor.specialization }}</p>
+                                        <button type="button" class="btn btn-sm btn-outline-primary select-doctor">
+                                            Select
+                                        </button>
+                                    </div>
+                                    <input type="radio" name="doctor_id" value="{{ doctor._id }}" 
+                                           class="doctor-radio" id="doctor_{{ doctor._id }}" required>
+                                    <input type="hidden" name="doctor_name" value="Dr. {{ doctor.last_name }}">
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Date and Time Selection -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 class="section-title"><i class="fas fa-calendar-day me-2"></i>Select Date</h5>
+                                <div class="date-picker">
+                                    <input type="date" class="form-control" id="appointmentDate" 
+                                        name="appointment_date" min="{{ now|format_date }}" required>
+                                    <div class="date-options mt-3">
+                                        {% for slot in available_slots|groupby('date') %}
+                                        <button type="button" class="btn btn-outline-secondary date-option" 
+                                                data-date="{{ slot.grouper }}">
+                                            {{ slot.grouper|format_date }}
+                                        </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="section-title"><i class="fas fa-clock me-2"></i>Select Time</h5>
+                                <div class="time-slots" id="timeSlots">
+                                    <p class="text-muted">Please select a date first</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Appointment Details -->
+                        <div class="mb-4">
+                            <h5 class="section-title"><i class="fas fa-file-medical me-2"></i>Appointment Details</h5>
+                            <div class="form-group">
+                                <label for="appointmentReason" class="form-label">Reason for Visit</label>
+                                <select class="form-select" id="appointmentReason" name="reason" required>
+                                    <option value="" selected disabled>Select a reason</option>
+                                    <option value="Routine Checkup">Routine Checkup</option>
+                                    <option value="Follow-up Visit">Follow-up Visit</option>
+                                    <option value="Illness">Illness</option>
+                                    <option value="Injury">Injury</option>
+                                    <option value="Consultation">Consultation</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group mt-3">
+                                <label for="appointmentNotes" class="form-label">Additional Notes</label>
+                                <textarea class="form-control" id="appointmentNotes" name="notes" 
+                                          rows="3" placeholder="Any specific concerns or details..."></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="reset" class="btn btn-outline-secondary me-md-2">Reset</button>
+                            <button type="submit" class="btn btn-primary" id="submitAppointment">
+                                <i class="fas fa-calendar-check me-1"></i> Schedule Appointment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Appointment Scheduled</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Your appointment with <span id="modalDoctorName"></span> has been scheduled for <span id="modalAppointmentTime"></span>.</p>
+                <p>A confirmation has been sent to your account.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Close</button>
+                <a href="{{ url_for('main.appointments') }}" class="btn btn-outline-success">View Appointments</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/new_appointment.js') }}"></script>
+{% endblock %}

@@ -5,7 +5,7 @@ from .forms import Registration, LoginForm
 from flask_login import LoginManager, login_user, logout_user, login_required, login_remembered, current_user
 from flask_session import Session
 import datetime
-from . import health_metrics_collection, appointments_collection
+from . import health_metrics_collection, appointments_collection, format_date
 from flask import jsonify
 import os
 from datetime import datetime
@@ -993,6 +993,223 @@ def reports():
         flash("An error occurred while generating reports", "danger")
         return render_template("reports.html", has_data=False)
 
+@main_bp.route("/appointment/new-appointment", methods=['GET', 'POST'])
+@login_required
+def new_appointment():
+    from bson import ObjectId
+    from datetime import datetime, timedelta
+    from . import doctors, appointments_collection, pat_notification
+    
+    if request.method == 'POST':
+        try:
+            # Validate form data
+            required_fields = ['doctor_id', 'appointment_date', 'appointment_time', 'reason']
+            if not all(field in request.form for field in required_fields):
+                flash("Please fill all required fields", "danger")
+                return redirect(url_for('main.new_appointment'))
+            
+            # Parse date and time
+            appointment_datetime = datetime.strptime(
+                f"{request.form['appointment_date']} {request.form['appointment_time']}",
+                "%Y-%m-%d %H:%M"
+            )
+            
+            # Check if date is in the future
+            if appointment_datetime < datetime.now():
+                flash("Appointment date must be in the future", "danger")
+                return redirect(url_for('main.new_appointment'))
+            
+            # Check doctor availability (simplified - would need more complex logic in production)
+            existing_appointment = appointments_collection.find_one({
+                "doctor_id": ObjectId(request.form['doctor_id']),
+                "date_time": appointment_datetime,
+                "status": {"$ne": "cancelled"}
+            })
+            
+            if existing_appointment:
+                flash("Doctor is not available at that time", "danger")
+                return redirect(url_for('main.new_appointment'))
+            
+            # Create appointment
+            appointment_data = {
+                "patient_id": current_user.id,
+                "doctor_id": ObjectId(request.form['doctor_id']),
+                "date_time": appointment_datetime,
+                "reason": request.form['reason'],
+                "notes": request.form.get('notes', ''),
+                "status": "scheduled",
+                "created_at": datetime.now(),
+                "updated_at": datetime.now()
+            }
+            
+            # Insert into database
+            result = appointments_collection.insert_one(appointment_data)
+            
+            # Create notification
+            pat_notification.insert_one({
+                "user_id": current_user.id,
+                "type": "appointment_scheduled",
+                "message": f"New appointment scheduled with Dr. {request.form.get('doctor_name', '')}",
+                "related_appointment": result.inserted_id,
+                "is_read": False,
+                "created_at": datetime.now()
+            })
+            
+            flash("Appointment scheduled successfully!", "success")
+            return redirect(url_for('main.appointments'))
+            
+        except ValueError as e:
+            flash(f"Invalid date/time format: {str(e)}", "danger")
+        except Exception as e:
+            current_app.logger.error(f"Error creating appointment: {str(e)}", exc_info=True)
+            flash("An error occurred while scheduling the appointment", "danger")
+    
+    # GET request - fetch doctors and available time slots
+    doctors_list = list(doctors.find({}, {
+        "_id": 1,
+        "first_name": 1,
+        "last_name": 1,
+        "specialization": 1,
+        "profile_picture": 1
+    }))
+    
+    # Generate available time slots (simplified)
+    available_slots = generate_time_slots()
+    
+    return render_template("new_appointment.html",
+                        now=datetime.now(),
+                        doctors=doctors_list,
+                        available_slots=available_slots)
+
+def generate_time_slots():
+    """Generate time slots for the next 7 days"""
+    from datetime import datetime, timedelta, time
+    
+    slots = []
+    start_time = time(9, 0)  # 9:00 AM
+    end_time = time(17, 0)   # 5:00 PM
+    
+    for day in range(1, 8):  # Next 7 days
+        current_date = datetime.now() + timedelta(days=day)
+        if current_date.weekday() >= 5:  # Skip weekends
+            continue
+            
+        current_time = datetime.combine(current_date, start_time)
+        end_datetime = datetime.combine(current_date, end_time)
+        
+        while current_time <= end_datetime:
+            slots.append({
+                "date": current_time.strftime("%Y-%m-%d"),
+                "time": current_time.strftime("%H:%M"),
+                "display": current_time.strftime("%I:%M %p")
+            })
+            current_time += timedelta(minutes=30)  # 30-minute slots
+    
+    return slots
+
+@main_bp.route("/claim/submission", methods=['GET', 'POST'])
+@login_required
+def submit_claim():
+    from bson import ObjectId
+    from datetime import datetime
+    from . import claims, medical_expenses, insurance_provider
+    
+    if request.method == 'POST':
+        try:
+            # Validate required fields
+            required_fields = ['expense_id', 'insurance_provider_id', 'submission_date']
+            if not all(field in request.form for field in required_fields):
+                flash("Please fill all required fields", "danger")
+                return redirect(url_for('main.submit_claim'))
+            
+            # Create claim data
+            claim_data = {
+                "patient_id": current_user.id,
+                "expense_id": ObjectId(request.form['expense_id']),
+                "insurance_provider_id": ObjectId(request.form['insurance_provider_id']),
+                "submission_date": datetime.strptime(request.form['submission_date'], '%Y-%m-%d'),
+                "status": "submitted",
+                "amount": float(request.form['amount']),
+                "description": request.form.get('description', ''),
+                "attachments": [],
+                "created_at": datetime.now(),
+                "updated_at": datetime.now()
+            }
+            
+            # Handle file uploads
+            if 'files' in request.files:
+                files = request.files.getlist('files')
+                for file in files:
+                    if file.filename == '':
+                        continue
+                    if file and allowed_file(file.filename):
+                        filename = secure_filename(file.filename)
+                        upload_dir = os.path.join(
+                            current_app.root_path,
+                            'static/uploads/claims',
+                            str(current_user.id)
+                        )
+                        os.makedirs(upload_dir, exist_ok=True)
+                        filepath = os.path.join(upload_dir, filename)
+                        file.save(filepath)
+                        
+                        claim_data['attachments'].append({
+                            "filename": filename,
+                            "path": f"claims/{current_user.id}/{filename}",
+                            "uploaded_at": datetime.now()
+                        })
+            
+            # Insert claim
+            claims.insert_one(claim_data)
+            flash("Claim submitted successfully!", "success")
+            return redirect(url_for('main.insurance'))
+            
+        except Exception as e:
+            current_app.logger.error(f"Error submitting claim: {str(e)}", exc_info=True)
+            flash("An error occurred while submitting your claim", "danger")
+    
+    # GET request - load expenses and insurance providers
+    expenses = list(medical_expenses.find(
+        {"patient_id": current_user.id, "claim_submitted": False},
+        sort=[("date", -1)]
+    ))
+    
+    providers = list(insurance_provider.find(
+        {},
+        {"_id": 1, "name": 1, "plan_name": 1}
+    ))
+    
+    return render_template("claim.html",
+                         expenses=expenses,
+                         providers=providers,
+                         today=datetime.now().strftime('%Y-%m-%d'))
+
+@main_bp.route("/insurance")
+@login_required
+def insurance():
+    from . import insurance_provider, claims
+    from bson import ObjectId
+    
+    # Get insurance providers
+    providers = list(insurance_provider.find({}))
+    
+    # Get claims for each provider
+    for provider in providers:
+        provider['claims'] = list(claims.find({
+            "patient_id": current_user.id,
+            "insurance_provider_id": provider['_id']
+        }, sort=[("submission_date", -1)]))
+        
+        # Convert ObjectIds and dates
+        provider['_id'] = str(provider['_id'])
+        for claim in provider['claims']:
+            claim['_id'] = str(claim['_id'])
+            claim['submission_date'] = claim['submission_date'].strftime('%Y-%m-%d')
+            claim['created_at'] = claim['created_at'].strftime('%Y-%m-%d')
+    
+    return render_template("insurance.html",
+                         providers=providers)
+
 
 @main_bp.route("/profile/settings")
 def settings():
@@ -1011,19 +1228,4 @@ def patients():
 
 @main_bp.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html")
-
-
-@main_bp.route("/appointment/new-appointment")
-def new_appointment():
-    return render_template("new_appointment.html")
-
-
-@main_bp.route("/claim/submission")
-def submit_claim():
-    return render_template("claim.html")
-
-
-@main_bp.route("/insuarance")
-def insurance():
-    return render_template("insurance.html")
+    return render_template("homepage.html")

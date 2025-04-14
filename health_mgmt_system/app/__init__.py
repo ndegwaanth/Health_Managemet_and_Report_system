@@ -77,6 +77,21 @@ def load_user(user_id):
     except:
         return None
 
+# Add this near the top of your __init__.py after creating the app
+from datetime import datetime
+
+def format_date(value, format='%b %d, %Y'):
+    """Format a date string"""
+    if isinstance(value, str):
+        try:
+            value = datetime.strptime(value, '%Y-%m-%d')
+        except ValueError:
+            return value
+    return value.strftime(format)
+
+# Add the filter to Jinja2 environment
+app.jinja_env.filters['format_date'] = format_date
+
 # Register blueprints
 from .routes import main_bp
 app.register_blueprint(main_bp)

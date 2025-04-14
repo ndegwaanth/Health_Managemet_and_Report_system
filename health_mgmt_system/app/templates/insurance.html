@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Insurance | HealthTrack Pro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/insurance.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Insurance Management</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <a href="{{ url_for('main.submit_claim') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> New Claim
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for provider in providers %}
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ provider.name }}</h5>
+                    <span class="badge bg-info">{{ provider.plan_name }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div>
+                            <h6 class="text-muted">Policy Number</h6>
+                            <p>{{ provider.policy_number or 'Not specified' }}</p>
+                        </div>
+                        <div>
+                            <h6 class="text-muted">Coverage</h6>
+                            <p>{{ provider.coverage_percentage }}%</p>
+                        </div>
+                    </div>
+                    
+                    <h6 class="mt-4 mb-3">Recent Claims</h6>
+                    {% if provider.claims %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for claim in provider.claims %}
+                                <tr>
+                                    <td>{{ claim.submission_date }}</td>
+                                    <td>${{ "%.2f"|format(claim.amount) }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if claim.status == 'approved' %}bg-success
+                                            {% elif claim.status == 'rejected' %}bg-danger
+                                            {% else %}bg-warning{% endif %}">
+                                            {{ claim.status|title }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="#" class="btn btn-sm btn-outline-primary">Details</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        No claims submitted with this provider
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/insurance.js') }}"></script>
+{% endblock %}
