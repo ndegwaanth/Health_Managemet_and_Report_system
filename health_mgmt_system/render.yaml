@@ -1,10 +1,8 @@
 services:
   - type: web
-    name: flask-app
-    env: python
-    plan: free
-    region: frankfurt
+    name: health-mgmt-system
+    rootDir: health_mgmt_system
+    runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
-    autoDeploy: true
 
